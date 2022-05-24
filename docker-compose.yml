@@ -18,6 +18,7 @@ services:
       - "8983:8983"
     volumes:
        - solr_db:/var/solr/data
+       - ./ingest.sh:/ingest.sh 
        - ./volumes/solr/data:/tmp/data
     restart: always
     networks:
@@ -25,8 +26,7 @@ services:
     entrypoint:
       - bash
       - "-c"
-      - "precreate-core mmd /opt/solr/server/solr/configsets/mmd; /opt/solr/bin/post -host solr -c mmd /tmp/data/example/*.json ;exec solr -f"
-
+      - "precreate-core mmd /opt/solr/server/solr/configsets/mmd;exec solr -f"
 
 volumes:
   solr_db:
