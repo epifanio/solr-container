@@ -1,0 +1,67 @@
+version: '3.5'
+services:
+  solr:
+    build:
+      context: ./metsis-solr/
+      dockerfile: Dockerfile
+    container_name: epinux_solr
+    image: epinux/solr
+    environment:
+      VIRTUAL_HOST: solr
+      #VIRTUAL_PORT: 8983
+      NETWORK_ACCESS: internal
+      #LETSENCRYPT_HOST: ${SOLR_VIRTUAL_HOST}
+      #LETSENCRYPT_MAIL: ${MY_EMAIL}
+    ports:
+      - "8983:8983"
+    volumes:
+       - solr_db:/var/solr/data
+       - ./volumes/solr/data:/tmp/data
+    restart: always
+    entrypoint:
+      - bash
+      - "-c"
+      - "precreate-core mmd /opt/solr/server/solr/configsets/mmd; /opt/solr/bin/post -host solr.epinux.com-c mmd /tmp/data/example/*.json ;exec solr -f"
+    networks:
+      - net
+      - traefik-public
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 4096M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.solr-http.rule=Host(`${DOMAIN?Variable not set}`)
+        - traefik.http.routers.solr-http.entrypoints=http
+        - traefik.http.routers.solr-http.middlewares=https-redirect
+        - traefik.http.routers.solr-https.rule=Host(`${DOMAIN?Variable not set}`)
+        - traefik.http.routers.solr-https.entrypoints=https
+        - traefik.http.routers.solr-https.tls=true
+        - traefik.http.routers.solr-https.tls.certresolver=le
+        - traefik.http.services.solr.loadbalancer.server.port=8983
+        # allow CORS
+        - "traefik.http.middlewares.testheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT"
+        - "traefik.http.middlewares.testheader.headers.accesscontrolalloworiginlist=*"
+        - "traefik.http.middlewares.testheader.headers.accesscontrolmaxage=100"
+        - "traefik.http.middlewares.testheader.headers.addvaryheader=true"
+
+networks:
+  net:
+    driver: overlay
+    attachable: true
+  traefik-public:
+    external: true
+
+volumes:
+  solr_db:
+    name: solr_db
+

@@ -1,0 +1,38 @@
+version: '3.5'
+services:
+  solr:
+    build:
+      context: ./docker/
+      dockerfile: Dockerfile
+    container_name: epinux_solr
+    image: epinux/solr
+    environment:
+      VIRTUAL_HOST: solr
+      #VIRTUAL_PORT: 8983
+      SOLR_HOST: localhost:8893
+      # solr.epinux.com
+      NETWORK_ACCESS: internal
+      #LETSENCRYPT_HOST: ${SOLR_VIRTUAL_HOST}
+      #LETSENCRYPT_MAIL: ${MY_EMAIL}
+    ports:
+      - "8983:8983"
+    volumes:
+       - solr_db:/var/solr/data
+       - ./volumes/solr/data:/tmp/data
+    restart: always
+    networks:
+      - net
+    entrypoint:
+      - bash
+      - "-c"
+      - "precreate-core mmd /opt/solr/server/solr/configsets/mmd; /opt/solr/bin/post -host solr -c mmd /tmp/data/example/*.json ;exec solr -f"
+    command: /opt/solr/bin/post -host solr -c mmd /tmp/data/example/*.json
+
+
+volumes:
+  solr_db:
+    name: solr_db
+
+networks:
+  net:
+    attachable: true
