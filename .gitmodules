@@ -1,4 +1,0 @@
-[submodule "docker/mmdconfig/docker/mmdconfig/conf"]
-	path = docker/mmdconfig/docker/mmdconfig/conf
-	url = https://github.com/magnarem/drupal8solr_configs
-	branch = adc
