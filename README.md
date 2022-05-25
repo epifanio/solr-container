@@ -3,7 +3,7 @@
 Docker container for the SOLR search engine
 
 
-To ingest example resords run:
+To ingest example records run:
 
 `docker exec CONTAINER_ID /bin/bash /ingest.sh`
 
